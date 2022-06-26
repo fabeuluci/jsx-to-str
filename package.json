@@ -1,0 +1,25 @@
+{
+  "name": "jsx-to-str",
+  "version": "1.0.5",
+  "description": "Very simple and tiny jsx to string converter",
+  "license": "MIT",
+  "author": {
+    "name": "Fabeuluci"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fabeuluci/jsx-to-str.git"
+  },
+  "main": "./out/index.js",
+  "types": "./out/index.d.ts",
+  "scripts": {
+    "test": "q-test",
+    "compile": "rm -rf out && tsc",
+    "watch": "tsc -w"
+  },
+  "devDependencies": {
+    "@types/q-test": "^1.0.0",
+    "@types/node": "^17.0.25",
+    "q-test": "^1.0.0"
+  }
+}

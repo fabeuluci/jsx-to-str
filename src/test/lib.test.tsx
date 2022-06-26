@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import { h, Fragment, Raw } from "../index";
+import "q2-test";
 
 it("Template should return a valid html", () => {
     

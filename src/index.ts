@@ -3,16 +3,57 @@ declare global {
         interface IntrinsicElements {
             [elemName: string]: any;
         }
-        type Element = Compiled;
+        type Element = Renderable;
     }
 }
 
-export class Compiled {
+export abstract class Renderable<T = unknown> {
+    abstract render(context?: T): string;
+}
+
+export class TagResult<T = unknown> extends Renderable <T>{
     
-    constructor(private html: string) {
+    constructor(public tag: string|Function, public attributes: {[name: string]: unknown}, public children: unknown[]) {
+        super();
     }
     
-    toString(): string {
+    render(context?: T): string {
+        if (typeof(this.tag) == "function") {
+            return this.tag.call(context, this.attributes, this.children).render(context);
+        }
+        let html = "<" + this.tag;
+        for (const key in this.attributes) {
+            const value = this.attributes[key];
+            html += " " + key + "=\"" + escapeAttributeValue(value) + "\"";
+        }
+        if (this.children.length > 0) {
+            html += ">" + renderChild(this.children, context) + "</" + this.tag + ">";
+        }
+        else {
+            html += isSelfClosingTag(this.tag) ? " />" : "></" + this.tag + ">";
+        }
+        return html;
+    }
+}
+
+export class FragmentResult<T = unknown> extends Renderable<T> {
+    
+    constructor(public children: unknown[]) {
+        super();
+    }
+    
+    render(context?: T): string {
+        return renderChild(this.children, context);
+    }
+}
+
+export class RawResult<T = unknown> extends Renderable<T> {
+    
+    constructor(public html: string) {
+        super();
+    }
+    
+    render(_context?: T): string {
         return this.html;
     }
 }
@@ -52,33 +93,19 @@ function escapeAttributeValue(str: unknown): string {
     return ss.replace(/"/g, "&quot;");
 }
 
-export function h(tag: string|Function, attributes: {[name: string]: unknown}, ...children: unknown[]): Compiled {
-    if (typeof(tag) == "function") {
-        return tag(attributes, children);
-    }
-    let html = "<" + tag;
-    for (const key in attributes) {
-        const value = attributes[key];
-        html += " " + key + "=\"" + escapeAttributeValue(value) + "\"";
-    }
-    if (children.length > 0) {
-        html += ">" + renderChild(children) + "</" + tag + ">";
-    }
-    else {
-        html += isSelfClosingTag(tag) ? " />" : "></" + tag + ">";
-    }
-    return new Compiled(html);
+export function h(tag: string|Function, attributes: {[name: string]: unknown}, ...children: unknown[]): Renderable {
+    return new TagResult(tag, attributes, children);
 }
 
-export function Raw(html: string) {
-    return new Compiled(html);
+export function Raw(html: string): Renderable {
+    return new RawResult(html);
 }
 
-export function Fragment(_props: unknown, children: unknown[]) {
-    return new Compiled(renderChild(children));
+export function Fragment(_props: unknown, children: unknown[]): Renderable {
+    return new FragmentResult(children);
 }
 
-function renderChild(child: unknown) {
+function renderChild(child: unknown, context?: unknown) {
     if (typeof(child) === "number") {
         return child.toString(10);
     }
@@ -95,8 +122,8 @@ function renderChild(child: unknown) {
         }
         return html;
     }
-    if (child instanceof Compiled) {
-        return child.toString();
+    if (child instanceof Renderable) {
+        return child.render(context);
     }
     throw new Error("Cannot render (type=" + typeof(child) + ") " + child);
 }

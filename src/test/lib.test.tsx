@@ -44,7 +44,24 @@ it("Template should return a valid html", () => {
     }
     
     const expected = `<div class="zxc"><div class="qwe"><h1>Abc</h1><div class="ttt" checked="true" dupa="true" zzxc="true"></div><img src="zxczc&quot;zxcz" /><img src="/asd/zxc?iop=qwe&ycy=123" /><hr />&amp; w &amp; &lt;zxczc&quot;zxczasd</div><div>Hello</div>qwe&amp;zxc123NaN<h1>zxc</h1>uq&amp;w123<i>raw html</i></div>`;
-    const output = App().toString();
+    const output = App().render();
+    
+    assert(expected === output)
+});
+
+interface Context {
+    abc: number;
+}
+
+it("Should properly use context", () => {
+    
+    function MyComponent(this: Context, props: {d: number}) {
+        return <div>{props.d}<p>{this.abc}</p></div>;
+    }
+    
+    const expected = '<div>678<p>123</p></div>';
+    const context: Context = {abc: 123};
+    const output = (<MyComponent d={678} />).render(context);
     
     assert(expected === output)
 });

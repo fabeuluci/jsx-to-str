@@ -7,6 +7,12 @@ declare global {
     }
 }
 
+export type FuntionalComponent<T, C = unknown> = (this: C, props: T, children?: unknown[]) => Renderable<C>;
+
+export function renderJsx<T, C = unknown>(page: FuntionalComponent<T, C>, props: T, context: C) {
+    return h(page, props as any).render(context);
+}
+
 export abstract class Renderable<T = unknown> {
     abstract render(context?: T): string;
 }
